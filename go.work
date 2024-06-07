@@ -1,0 +1,7 @@
+go 1.21.5
+
+use (
+	./another-artifact-api
+	./another-artifact-bot
+	./another-artifact-spec
+)
