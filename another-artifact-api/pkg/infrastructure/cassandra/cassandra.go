@@ -48,7 +48,7 @@ func New(config conf.Cassandra) *Impl {
 		},
 		enablePulse: config.EnablePulse,
 	}
-	// impl.Pulsate()
+	impl.Pulsate()
 	return impl
 }
 
@@ -79,5 +79,28 @@ func (i *Impl) ListStories(int64, int64, model.Nature) ([]model.Story, error) {
 }
 
 func (i *Impl) Pulsate() {
-	panic("unimplemented")
+	periodicPulseCh := time.NewTicker(time.Hour)
+	go func () {
+		for range periodicPulseCh.C {	
+			pool, ok := i.pool.Get().(*grpc.ClientConn)	
+			if !ok {
+				log.Println("failed to cast the connection from the pool")
+			}
+			client, err := client.NewStargateClientWithConn(pool)
+			if err != nil {
+				log.Printf("failed to acquire connection to ping the database at %v to prevent hibernation ", time.Now().String())
+			}	
+
+			client.ExecuteQuery(&proto.Query{
+				Cql: "INSERT INTO main.heartbeats(reported_heartbeat) VALUES (?);",
+				Values: &proto.Values{Values: 
+				[]*proto.Value{
+					{Inner: &proto.Value_Int{Int: time.Now().Unix()}},
+				}},
+			})
+			if err != nil {
+				log.Printf("failed to produce a pulse to ping the database at %v to prevent hibernation ", time.Now().String())
+			}	
+		}
+	}()
 }
