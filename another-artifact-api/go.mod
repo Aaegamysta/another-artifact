@@ -9,6 +9,7 @@ require (
 )
 
 require (
+	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	golang.org/x/net v0.26.0 // indirect
